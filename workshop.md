@@ -191,7 +191,7 @@ Each step has a **Solution** that indicates one possible answer. Note that all q
     predicate isSource(DataFlow::Node arg) {
       exists(FunctionCall call |
         arg.asExpr() = call.getArgument(0) and
-        call.hasGlobalOrStdName("free")
+        call.getTarget().hasGlobalOrStdName("free")
       )
     }
     ```
@@ -228,7 +228,7 @@ Each step has a **Solution** that indicates one possible answer. Note that all q
     predicate isSource(DataFlow::Node arg) {
       exists(FunctionCall call |
         arg.asDefiningArgument() = call.getArgument(0) and
-        call.hasGlobalOrStdName("free")
+        call.getTarget().hasGlobalOrStdName("free")
       )
     }
     ```
@@ -276,12 +276,14 @@ import DataFlow::PathGraph
 class Config extends DataFlow::Configuration {
   Config() { this = "Config: name doesn't matter" }
 
+  /* TODO move over solution from Section 1 */
   override predicate isSource(DataFlow::Node source) {
     exists(/* TODO fill me in from Section 1 */ |
       /* TODO fill me in from Section 1 */
     )
   }
 
+  /* TODO move over solution from Section 2 */
   override predicate isSink(DataFlow::Node sink) {
     /* TODO fill me in from Section 2 **/
   }
@@ -292,9 +294,9 @@ where config.hasFlowPath(source, sink)
 select sink, source, sink, "Memory is $@ and $@, causing a potential vulnerability.", source, "freed here", sink, "used here"
 ```
 
-1. Fill in the `isSource` predicate you wrote for [Section 1](#section1).
+1. Fill in or move the `isSource` predicate you wrote for [Section 1](#section1).
 
-1. Fill in the `isSink` predicate you wrote for [Section 2](#section2).
+1. Fill in or move the `isSink` predicate you wrote for [Section 2](#section2).
 
 1. You can now run the completed query. Use the path explorer in the results view to check the results.
 
