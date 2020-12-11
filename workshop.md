@@ -273,7 +273,7 @@ import cpp
 import semmle.code.cpp.dataflow.DataFlow
 import DataFlow::PathGraph
 
-class Config extends TaintTracking::Configuration {
+class Config extends DataFlow::Configuration {
   Config() { this = "Config: name doesn't matter" }
 
   override predicate isSource(DataFlow::Node source) {
@@ -311,11 +311,12 @@ select sink, source, sink, "Memory is $@ and $@, causing a potential vulnerabili
       import semmle.code.cpp.dataflow.DataFlow
       import DataFlow::PathGraph
 
-      class Config extends TaintTracking::Configuration {
+      class Config extends DataFlow::Configuration {
         Config() { this = "Config: name doesn't matter" }
         override predicate isSource(DataFlow::Node source) {
           exists(FunctionCall call |
-            source.asDefiningArgument() = call.getArgument(0)
+            source.asDefiningArgument() = call.getArgument(0) and
+            call.getTarget().hasGlobalOrStdName("free")
           )
         }
         override predicate isSink(DataFlow::Node sink) {
