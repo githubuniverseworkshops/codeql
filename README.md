@@ -22,10 +22,10 @@
     git submodule --init --remote
     ```
 - Open the repository in Visual Studio Code: **File** > **Open Folder** > Browse to the checkout of `githubuniverseworkshops/codeql`.
-- Import the [CodeQL database](TODO) to be used in the workshop:
+- Import the [CodeQL database](https://github.com/githubuniverseworkshops/codeql/releases/download/universe-2020/codeql-cpp-workshop-uaf.zip) to be used in the workshop:
   - Click the **CodeQL** rectangular icon in the left sidebar.
   - Place your mouse over **Databases**, and click the icon labelled `Download Database`.
-  - Use this URL: **TODO**.
+  - Copy and paste this URL into the box: https://github.com/githubuniverseworkshops/codeql/releases/download/universe-2020/codeql-cpp-workshop-uaf.zip
   - Click on the database name, and click **Set Current Database**.
 - You're ready! Proceed to the [workshop](workshop.md).
 
