@@ -161,8 +161,8 @@ Each step has a **Solution** that indicates one possible answer. Note that all q
     ```ql
     predicate isSource(Expr arg) {
       exists(FunctionCall call |
-        arg = call.getArgument(0)) and
-        call.hasGlobalOrStdName("free")
+        arg = call.getArgument(0) and
+        call.getTarget().hasGlobalOrStdName("free")
       )
     }
     ```
