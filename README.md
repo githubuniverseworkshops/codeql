@@ -19,7 +19,7 @@
   - **Please don't forget `--recursive`:** This allows you to obtain the standard CodeQL query libraries, which are included as a Git submodule of this repository.
   - **What if I forgot to add `--recursive`?** If you've already cloned the repository, please set up the submodule by running:
     ```
-    git submodule --init --remote
+    git submodule update --init --remote
     ```
 - Open the repository in Visual Studio Code: **File** > **Open Folder** > Browse to the checkout of `githubuniverseworkshops/codeql`.
 - Import the [CodeQL database](https://github.com/githubuniverseworkshops/codeql/releases/download/universe-2020/codeql-cpp-workshop-uaf.zip) to be used in the workshop:
