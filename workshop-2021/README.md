@@ -550,7 +550,7 @@ For more information on how the vulnerability was identified, read the [blog pos
 - [CodeQL for Java](https://codeql.github.com/docs/codeql-language-guides/codeql-for-java/)
 - [Analyzing data flow in Java](https://codeql.github.com/docs/codeql-language-guides/analyzing-data-flow-in-java/)
 - [Using the CodeQL extension for VS Code](https://codeql.github.com/docs/codeql-for-visual-studio-code/)
-- Try out the latest CodeQL Java Capture-the-Flag challenge on the [GitHub Security Lab website](https://securitylab.github.com/ctf) for a chance to win a prize! Or try one of the older Capture-the-Flag challenges to improve your CodeQL skills.
+- Try out the Capture-the-Flag challenges on the [GitHub Security Lab website](https://securitylab.github.com/ctf)!
 - Read about more vulnerabilities found using CodeQL on the [GitHub Security Lab research blog](https://securitylab.github.com/research).
 - Explore the [open-source CodeQL queries and libraries](https://github.com/github/codeql), and [learn how to contribute a new query](https://github.com/github/codeql/blob/main/CONTRIBUTING.md).
 - [Configure CodeQL code scanning](https://docs.github.com/en/code-security/code-scanning) in your open-source repository.
