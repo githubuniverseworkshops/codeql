@@ -58,13 +58,26 @@ If you get stuck, try searching our documentation and blog posts for help and id
 - CodeQL on [GitHub Learning Lab](https://lab.github.com/search?q=codeql)
 - For more advanced CodeQL development in future, you may wish to set up the [CodeQL starter workspace](https://codeql.github.com/docs/codeql-for-visual-studio-code/setting-up-codeql-in-visual-studio-code/#using-the-starter-workspace) for all languages.
 
+### Useful commands
+- Run a query using the following commands from the Command Palette (`Cmd/Ctrl + Shift + P`) or right-click menu:
+  - `CodeQL: Run Query` (run the entire query)
+  - `CodeQL: Quick Evaluation` (run only the selected predicate or snippet)
+- Click the links in the query results to navigate to the source code.
+- Explore the CodeQL libraries in your IDE using:
+  - autocomplete suggestions (`Cmd/Ctrl + Space`)
+  - jump-to-definition (`F12`, or `Cmd/Ctrl + F12` in a Codespace)
+  - documentation hovers (place your cursor over an element)
+  - the AST viewer on an open source file (`View AST` from the CodeQL sidebar or Command Palette)
+
 ## Workshop <a id="workshop"></a>
 
-The workshop is split into several steps. You can write one query per step, or work with a single query that you refine at each step. Each step has a **hint** that describes useful classes and predicates in the CodeQL standard libraries for Java. You can explore these in your IDE using the autocomplete suggestions (`Cmd/Ctrl + Space`) and the jump-to-definition command (`F12`).
+The workshop is split into several steps. You can write one query per step, or work with a single query that you refine at each step. Each step has a **hint** that describes useful classes and predicates in the CodeQL standard libraries for Java.
 
 ### Section 1: Finding ObjectInput deserialization <a id="section1"></a>
 
-Apache Dubbo uses an [abstraction layer](https://dubbo.apache.org/en/docs/v2.7/dev/impls/serialize/) to wrap multiple deserialization formats. Most of the supported serialization libraries might lead to arbitrary code execution upon deserialization of untrusted data. The SPI interface used for deserialization is called [ObjectInput](https://javadoc.io/doc/org.apache.dubbo/dubbo/latest/com/alibaba/dubbo/common/serialize/ObjectInput.html). It provides multiple `readXXX` methods for deserializing data to a Java object. By default, the input is not validated in any way, and is vulnerable to remote code execution exploits. In this section, we will identify calls to `ObjectInput.readXXX` methods in the codebase.
+Apache Dubbo uses an [abstraction layer](https://dubbo.apache.org/en/docs/v2.7/dev/impls/serialize/) to wrap multiple deserialization formats. Most of the supported serialization libraries might lead to arbitrary code execution upon deserialization of untrusted data. The SPI interface used for deserialization is called [ObjectInput](https://javadoc.io/doc/org.apache.dubbo/dubbo/latest/com/alibaba/dubbo/common/serialize/ObjectInput.html). It provides multiple `readXXX` methods for deserializing data to a Java object. By default, the input is not validated in any way, and is vulnerable to remote code execution exploits.
+
+In this section, we will identify calls to `ObjectInput.readXXX` methods in the codebase. The qualifiers of these calls are the values being deserialized, and hence are **sinks** for deserialization vulnerabilities.
 
  1. Find all method calls in the program.
     <details>
@@ -89,8 +102,9 @@ Apache Dubbo uses an [abstraction layer](https://dubbo.apache.org/en/docs/v2.7/d
     <summary>Hints</summary>
 
     - Add a CodeQL variable called `method` with type `Method`.
-    - `MethodAccess` has a predicate called `getMethod()` for returning the method.
     - Add a `where` clause.
+    - `MethodAccess` has a predicate called `getMethod()` for returning the method.
+    - Use the equality operator `=` to assert that two CodeQL expressions are the same.
 
     </details>
     <details>
@@ -112,6 +126,7 @@ Apache Dubbo uses an [abstraction layer](https://dubbo.apache.org/en/docs/v2.7/d
 
     - `Method.getName()` returns a string representing the name of the method.
     - `string.matches("foo%")` can be used to check if a string starts with `foo`.
+    - Use the `and` keyword to add multiple conditions to the `where` clause.
 
     </details>
     <details>
@@ -128,15 +143,22 @@ Apache Dubbo uses an [abstraction layer](https://dubbo.apache.org/en/docs/v2.7/d
     ```
     </details>
 
- 1. Refine your query to only match calls to `read` methods on classes implementing the `ObjectInput` interface.<a id="question1"></a>
+ 1. Refine your query to only match calls to `read` methods on classes implementing the `org.apache.dubbo.common.serialize.ObjectInput` interface.<a id="question1"></a>
 
     <details>
     <summary>Hint</summary>
 
     - `Method.getDeclaringType()` returns the `RefType` this method is declared on. A `Class` is one kind of `RefType`.
-    - `RefType.getASourceSupertype()` returns the immediate parent/supertypes for a given type.
+    - `RefType.getASourceSupertype()` returns the immediate parent/supertypes for a given type, as defined in the Java source. (Hover to see the documentation.)
     - Use the "reflexive transitive closure" operator `*` on a call to a predicate with 2 arguments, e.g. `getASourceSupertype*()`, to apply the predicate 0 or more times in succession.
-    - `RefType.hasQualifiedName("package", "class")` holds if the given `RefType` has the qualified name `package.class`.
+    - `RefType.hasQualifiedName("package", "class")` holds if the given `RefType` has the fully-qualified name `package.class`.
+    For example, the query
+      ```ql
+      from RefType r
+      where r.hasQualifiedName("java.lang", "String")
+      select r
+      ```
+      will find the type `java.lang.String`.
 
     </details>
     <details>
@@ -220,11 +242,14 @@ Apache Dubbo uses an [abstraction layer](https://dubbo.apache.org/en/docs/v2.7/d
 
 ### Section 2: Find the implementations of the decodeBody method from DubboCodec<a id="section2"></a>
 
-Like predicates, _classes_ in CodeQL can be used to encapsulate reusable portions of logic. Classes represent single sets of values, and they can also include operations (known as _member predicates_) specific to that set of values. You have already seen numerous instances of CodeQL classes (`MethodAccess`, `Method` etc.) and associated member predicates (`MethodAccess.getMethod()`, `Method.getName()`, etc.).
+Classes that implement the interface `org.apache.dubbo.remoting.Codec2` process user input in their `decodeBody` methods. In this section we will find these methods and their parameters, which are **sources** of untrusted user input.
+
+Like predicates, _classes_ in CodeQL can be used to encapsulate reusable portions of logic. Classes represent sets of values, and they can also include operations (known as _member predicates_) specific to that set of values. You have already seen numerous instances of CodeQL classes (`MethodAccess`, `Method` etc.) and associated member predicates (`MethodAccess.getMethod()`, `Method.getName()`, etc.).
 
  1. Create a CodeQL class called `DubboCodec` to find the interface `org.apache.dubbo.remoting.Codec2`. You can use this template:
     ```ql
     class DubboCodec extends RefType {
+      // Characteristic predicate
       DubboCodec() {
           // TODO Fill me in
       }
@@ -234,13 +259,8 @@ Like predicates, _classes_ in CodeQL can be used to encapsulate reusable portion
     <details>
     <summary>Hint</summary>
 
-    - Use `RefType.hasQualifiedName(string packageName, string className)` to identify classes with the given package name and class name. For example:
-        ```ql
-        from RefType r
-        where r.hasQualifiedName("java.lang", "String")
-        select r
-        ```
-    - Within the characteristic predicate you can use the magic variable `this` to refer to the RefType
+    - Use `RefType.hasQualifiedName("package", "class")` to identify classes with the given package name and class name.
+    - Within the characteristic predicate, use the special variable `this` to refer to the `RefType` we are describing.
 
     </details>
     <details>
@@ -284,20 +304,29 @@ Like predicates, _classes_ in CodeQL can be used to encapsulate reusable portion
     ```
     </details>
 
- 3. `decodeBody` methods should consider the second and third parameters as untrusted user input. Write a query to find these parameters (i.e. index 1 and index 2) parameter for `decodeBody` methods.
+ 3. `decodeBody` methods should consider the second and third parameters as untrusted user input. Add a member predicate to your `DubboCodecDecodeBody` class that finds these parameters of `decodeBody` methods.
     <details>
     <summary>Hint</summary>
 
-    - Use `Method.getParameter(int index)` to get the i-th index parameter.
-    - Create a query with a single CodeQL variable of type `DubboCodecDecodeBody`.
+    - Create a predicate `Parameter getAnUntrustedParameter() { ... } ` within the class. This has result type `Parameter`.
+    - Within the predicate, use the special variable `result` to refer to the values to be "returned" or identified by the predicate.
+    - Within the predicate, use the special variable `this` to refer to the `DubboCodecDecodeBody` method.
+    - Use `Method.getParameter(int index)` to get the `i`-th index parameter. Indices are 0-based, so we want index 1 and index 2 here.
+    - Use Quick Evaluation to run your predicate.
 
     </details>
     <details>
     <summary>Solution</summary>
 
     ```ql
-    from DubboCodecDecodeBody decodeBodyMethod 
-    select decodeBodyMethod.getParameter([1, 2])
+    class DubboCodecDecodeBody extends Method {
+      DubboCodecDecodeBody() {
+        this.getDeclaringType().getASupertype*() instanceof DubboCodec and
+        this.hasName("decodeBody")
+      }
+
+      Parameter getAnUntrustedParameter() { result = this.getParameter([1, 2]) }
+    }
     ```
     </details>
 
@@ -329,9 +358,9 @@ The data flow graph for this method will look something like this:
 
 This graph represents the flow of data from the tainted parameter. The nodes of graph represent program elements that have a value, such as function parameters and expressions. The edges of this graph represent flow through these nodes.
 
-CodeQL for Java provides data flow analysis as part of the standard library. You can import it using `semmle.code.java.dataflow.DataFlow`. The library models nodes using the `DataFlow::Node` CodeQL class. These nodes are separate and distinct from the AST (Abstract Syntax Tree, which represents the basic structure of the program) nodes, to allow for flexibility in how data flow is modeled.
+CodeQL for Java provides data flow analysis as part of the standard library. You can import it using `semmle.code.java.dataflow.DataFlow` or `semmle.code.java.dataflow.TaintTracking`. The library models nodes using the `DataFlow::Node` CodeQL class. These nodes are separate and distinct from the AST (Abstract Syntax Tree, which represents the basic structure of the program) nodes, to allow for flexibility in how data flow is modeled.
 
-There are a small number of data flow node types – expression nodes and parameter nodes are most common.
+There are a small number of data flow node types – expression nodes and parameter nodes are most common. We can use the `asExpr()` and `asParameter()` methods to convert a `DataFlow::Node` into the corresponding AST node.
 
 In this section we will create a data flow query by populating this template:
 
@@ -355,11 +384,10 @@ class DubboUnsafeDeserializationConfig extends TaintTracking::Configuration {
   }
   override predicate isSink(DataFlow::Node sink) {
     exists(/** TODO fill me in **/ |
-      /** TODO fill me in **/
       sink.asExpr() = /** TODO fill me in **/
     )
   }
-  override predicate isAdditionalTaintStep(DataFlow::Node from, DataFlow::Node to) {
+  override predicate isAdditionalTaintStep(DataFlow::Node n1, DataFlow::Node n2) {
       /** TODO fill me in **/
   }
 }
@@ -369,55 +397,53 @@ where config.hasFlow(source, sink)
 select sink, "Unsafe deserialization"
 ```
 
- 1. Complete the `isSource` predicate using the query you wrote for [Section 2](#section2).
+ 1. Complete the `isSource` predicate, using the logic you wrote for [Section 2](#section2).
 
     <details>
     <summary>Hint</summary>
 
-    - You can translate from a query clause to a predicate by:
-       - Converting the variable declarations in the `from` part to the variable declarations of an `exists`
-       - Placing the `where` clause conditions (if any) in the body of the exists
-       - Adding a condition which equates the `select` to one of the parameters of the predicate.
-    - Remember to include the `DubboCodecDecodeBody` class you defined earlier.
+    - Remember the `DubboCodecDecodeBody` class and `getAnUntrustedParameter` predicate you defined earlier.
+    - Use `asParameter()` to convert a `DataFlow::Node` into a `Parameter`.
+    - Use `exists` to declare new variables, and `=` to assert that two values are the same.
 
     </details>
     <details>
     <summary>Solution</summary>
 
     ```ql
-      override predicate isSource(Node source) {
-        exists(DubboCodecDecodeBody decodeBodyMethod|
-          source.asParameter() = decodeBodyMethod.getParameter([1, 2])
-        )
+      override predicate isSource(DataFlow::Node source) {
+        exists(DubboCodecDecodeBody decodeBodyMethod |
+          source.asParameter() = decodeBodyMethod.getAnUntrustedParameter()
       }
     ```
     </details>
 
- 1. Complete the `isSink` predicate by using the final query you wrote for [Section 1](#section1). Remember to use the `isDeserialized` predicate!
+ 1. Complete the `isSink` predicate, using the logic you wrote for [Section 1](#section1).
     <details>
     <summary>Hint</summary>
 
     - Complete the same process as above.
+    - Remember the `isDeserialized` predicate you defined earlier.
+    - Use `asExpr()` to convert a `DataFlow::Node` into an `Expr`.
 
     </details>
     <details>
     <summary>Solution</summary>
 
     ```ql
-      override predicate isSink(Node sink) {
-        exists(Expr qualifier |
-          isDeserialized(qualifier) and
-          sink.asExpr() = qualifier 
-        )
+      override predicate isSink(DataFlow::Node sink) {
+        isDeserialized(sink.asExpr())
       }
     ```
     </details>
 
- 1. Complete the `isAdditionalTaintStep` predicate by modelling the `Serialization.deserialize()` method so that it connects its first argument with the return value.
+ 1. Teach CodeQL about extra data flow steps that it should follow. Complete the `isAdditionalTaintStep` predicate by modelling the `Serialization.deserialize()` method, which connects its _first argument_ with the _return value_.
     <details>
     <summary>Hint</summary>
 
-    - Complete the same process as above.
+    - As before, use `exists` to declare new variables, `asExpr()` to convert from `DataFlow::Node` to `Expr`,
+      and `=` to assert equality.
+    - `isAdditionalTaintStep` has two arguments: the node where data starts, and the node where data ends.
 
     </details>
     <details>
@@ -446,9 +472,9 @@ The answer to this is to convert the query to a _path problem_ query. There are 
  - Add a new import `DataFlow::PathGraph`, which will report the path data alongside the query results.
  - Change `source` and `sink` variables from `DataFlow::Node` to `DataFlow::PathNode`, to ensure that the nodes retain path information.
  - Use `hasFlowPath` instead of `hasFlow`.
- - Change the select to report the `source` and `sink` as the second and third columns. The toolchain combines this data with the path information from `PathGraph` to build the paths.
+ - Change the `select` clause to report the `source` and `sink` as the second and third columns. The toolchain combines this data with the path information from `PathGraph` to build the paths.
 
- 3. Convert your previous query to a path-problem query.
+ 3. Convert your previous query to a path-problem query. Run the query to see the paths in the results view.
     <details>
     <summary>Solution</summary>
 
@@ -484,20 +510,21 @@ The answer to this is to convert the query to a _path problem_ query. There are 
         this.getDeclaringType().getASupertype*() instanceof DubboCodec and
         this.hasName("decodeBody")
       }
+
+      Parameter getAnUntrustedParameter() {
+        result = this.getParameter([1, 2])
+      }
     }
 
-    class DubboUnsafeDeserializationConfig extends DataFlow::Configuration {
+    class DubboUnsafeDeserializationConfig extends TaintTracking::Configuration {
       DubboUnsafeDeserializationConfig() { this = "DubboUnsafeDeserializationConfig" }
       override predicate isSource(DataFlow::Node source) {
-        exists(DubboCodecDecodeBody decodeBodyMethod|
-          source.asParameter() = decodeBodyMethod.getParameter([1, 2])
+        exists(DubboCodecDecodeBody decodeBodyMethod |
+          source.asParameter() = decodeBodyMethod.getAnUntrustedParameter()
         )
       }
       override predicate isSink(DataFlow::Node sink) {
-        exists(Expr qualifier |
-          isDeserialized(qualifier) and
-          sink.asExpr() = qualifier 
-        )
+        isDeserialized(sink.asExpr())
       }
       override predicate isAdditionalTaintStep(DataFlow::Node n1, DataFlow::Node n2) {
         exists(MethodAccess ma |
@@ -516,7 +543,7 @@ The answer to this is to convert the query to a _path problem_ query. There are 
     ```
     </details>
 
-For more information on how the vulnerability was identified, you can read the [blog disclosing the original problem](https://securitylab.github.com/research/apache-dubbo/).
+For more information on how the vulnerability was identified, read the [blog post on the original problem](https://securitylab.github.com/research/apache-dubbo/).
 
 ## What's next?
 - [CodeQL overview](https://codeql.github.com/docs/codeql-overview/)
