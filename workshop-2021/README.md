@@ -383,12 +383,12 @@ class DubboUnsafeDeserializationConfig extends TaintTracking::Configuration {
     )
   }
   override predicate isSink(DataFlow::Node sink) {
-    exists(/** TODO fill me in **/ |
-      sink.asExpr() = /** TODO fill me in **/
-    )
+    /** TODO fill me in **/
   }
   override predicate isAdditionalTaintStep(DataFlow::Node n1, DataFlow::Node n2) {
+    exists(/** TODO fill me in **/ |
       /** TODO fill me in **/
+    )
   }
 }
 
