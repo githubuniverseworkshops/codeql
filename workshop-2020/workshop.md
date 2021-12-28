@@ -55,7 +55,7 @@ When you have completed setup, you should have:
 1. Cloned this repository with `git clone --recursive`.
 1. Opened this repository in VS Code.
 1. Downloaded, imported, and selected the [`codeql-cpp-workshop-uaf`](https://github.com/githubuniverseworkshops/codeql/releases/download/universe-2020/codeql-cpp-workshop-uaf.zip) CodeQL database from within VS Code.
-1. A `workshop-queries` folder within your workspace, containing an example query.
+1. A `workshop-2020` folder within your workspace, containing an example query named `example.ql`.
 1. A `codeql` folder within your workspace, containing the CodeQL standard libraries for most target languages.
 1. A copy of this `workshop.md` guide in your workspace.
 1. Open the query `workshop-queries/example.ql` and try running it!
