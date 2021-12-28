@@ -2,7 +2,7 @@
 
 - Analyzed language: C/C++
 
-If you are attending this workshop at GitHub Universe, or watching a recording, the facilitators will guide you through the steps below. You can use this document as a written reference.
+If you are attending this workshop at GitHub Universe, or watching [the recording](https://www.youtube.com/watch?v=eAjecQrfv3o), the facilitators will guide you through the steps below. You can use this document as a written reference.
 
 ## Overview
 
