@@ -2,6 +2,8 @@
 
 <h5 align="center">@adityasharad and @pwntester, moderated by @aeisenberg @jkcso @jf205 @xcorail</h5>
 
+If you are attending this workshop at GitHub Universe, or watching [the recording](https://www.youtube.com/watch?v=h3f1s8ACfPo), the facilitators will guide you through the steps below. You can use this document as a written reference.
+
 ## Prerequisites and setup instructions <a id="setup"></a>
 
 Please complete this section before the workshop, if possible.
