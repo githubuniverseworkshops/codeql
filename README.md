@@ -6,6 +6,7 @@
 
 This repositories contains multiple workshops, delivered at GitHub Universe in different years. Please choose the workshop you are interested in.
 
+- [GitHub Universe 2022](workshop-2022) - Finding security vulnerabilities in Ruby with CodeQL
 - [GitHub Universe 2021](workshop-2021) - Finding security vulnerabilities in Java with CodeQL
 - [GitHub Universe 2020](workshop-2020) - Finding security vulnerabilities in C/C++ with CodeQL
 
