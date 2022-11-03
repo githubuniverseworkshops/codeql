@@ -1,0 +1,4 @@
+name: githubuniverseworkshops/codeql-workshop-2022-ruby
+version: 0.0.1
+dependencies:
+  codeql/ruby-all: '0.4.2'
