@@ -32,6 +32,11 @@ Please complete this section before the workshop, if possible.
   - Copy and paste this URL into the box, then press **OK**/**Enter**: https://github.com/githubuniverseworkshops/codeql/releases/download/universe-2022/codeql-ruby-workshop-opf-openproject.zip
   - The CodeQL extension will download the CodeQL CLI and the chosen database.
   - After the database is downloaded, it will appear in the left sidebar under **Databases**. Click on the database name, and click **Set Current Database**.
+- Install the CodeQL library package for analyzing Ruby code.
+  - From the Command Palette (`Cmd/Ctrl+Shift+P`), search for and run the command `CodeQL: Install Pack Dependencies`.
+  - At the top of your VS Code window, type `github` in the box to filter the list.
+  - Check the box next to `githubuniverseworkshops/codeql-workshop-2022-ruby`.
+  - Click **OK**/**Enter**.
 - Run a test CodeQL query:
   - Open the file [`workshop-2022/example.ql`](/workshop-2022/example.ql).
   - From the Command Palette (`Cmd/Ctrl+Shift+P`) or the right-click context menu, click the command `CodeQL: Run Query`.
