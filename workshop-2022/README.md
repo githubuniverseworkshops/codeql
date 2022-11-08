@@ -389,6 +389,7 @@ The data flow graph is built on top of the AST, but contains more detailed seman
 
     - Add `import codeql.ruby.Concepts`.
     - Change the type of `redirectCall` to `Http::Server::HttpRedirectResponse`.
+    - Remove the logical condition that states the method name of `redirectCall` must be `"redirect_to"`.
     - Use `HttpRedirectResponse.getRedirectLocation()` to identify the redirect URL (previously this was the call argument).
 
     </details>
