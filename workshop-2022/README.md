@@ -509,7 +509,7 @@ select sink, "Potential URL redirection"
     ```
     </details>
 
-1. You can now run the completed query. You should find exactly two results.
+1. You can now run the completed query. You should find exactly one result.
 
     <details>
     <summary>Solution</summary>
@@ -553,7 +553,7 @@ select sink, "Potential URL redirection"
     - Use `hasFlowPath` instead of `hasFlow`.
     - Change the `select` clause to report the `source` and `sink` as the second and third columns. The toolchain combines this data with the path information from `PathGraph` to build the paths.
 
-    Convert your previous query to a path-problem query. Run the query to see the paths in the results view.
+    Convert your previous query to a path-problem query. Run the query to see the paths in the results view. You should find exactly two results.
 
     <details>
     <summary>Solution</summary>
