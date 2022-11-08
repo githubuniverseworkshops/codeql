@@ -260,6 +260,9 @@ The arguments of these method calls are the URLs being redirected to, and hence 
     - Use the `not exists` keywords to assert that a logical formula does _not_ hold, or that a particular value does _not_ exist.
     - Use Quick Evaluation on the characteristic predicate to see all values of your new class.
 
+    To view the differences in results, you can select the results of both query runs in the Query History view, right-click and use the `Compare Results` command to
+    view the differences.
+
     </details>
     <details>
     <summary>Solution</summary>
