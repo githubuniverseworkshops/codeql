@@ -195,7 +195,7 @@ The arguments of these method calls are the URLs being redirected to, and hence 
     }
 
     from Expr e
-    where isRedirectTarget(e)
+    where isRedirect(e)
     select e
     ```
     </details>
@@ -260,6 +260,9 @@ The arguments of these method calls are the URLs being redirected to, and hence 
     - Use the `not exists` keywords to assert that a logical formula does _not_ hold, or that a particular value does _not_ exist.
     - Use Quick Evaluation on the characteristic predicate to see all values of your new class.
 
+    To view the differences in results, you can select the results of both query runs in the Query History view, right-click and use the `Compare Results` command to
+    view the differences.
+
     </details>
     <details>
     <summary>Solution</summary>
@@ -286,6 +289,7 @@ The arguments of these method calls are the URLs being redirected to, and hence 
     - Use the `and not` keywords to exclude values from a logical formula.
     - Use the `regexpMatch` built-in predicate to match a `string` value using a (Java-style) regular expression. `.*` matches any string pattern. `|` is the alternation/or operator.
     - Use Quick Evaluation on the characteristic predicate to see all values of your new class.
+    - Use the Compare Results command in the Query History view to view the differences in results.
 
     </details>
     <details>
@@ -345,20 +349,20 @@ The arguments of these method calls are the URLs being redirected to, and hence 
 
 ### Section 2: Reasoning about semantic information<a id="section2"></a>
 
-In this section, we will move from reasoning about the AST to reasoning about data flow nodes.
+In this section, we will move from reasoning about the AST to reasoning about data flow.
 The data flow graph is built on top of the AST, but contains more detailed semantic information about the flow of information through the program. We will also use more concepts that are already modelled in the CodeQL standard libraries for Ruby, instead of having to manually model each pattern.
 
-1. The `DataFlow` library models the flow of data through the program. Import this library using `import codeql.ruby.dataflow.DataFlow`. The class `DataFlow::Node` from this library represents semantic elements in the program that may have a value. Data flow nodes typically have corresponding AST nodes, but we can perform more sophisticated reasoning on the data flow graph. Modify your predicate from the previous section to reason about data flow nodes instead of AST nodes.
+1. The `DataFlow` library models the flow of data through the program. Import this library using `import codeql.ruby.DataFlow`. The class `DataFlow::Node` from this library represents semantic elements in the program that may have a value. Data flow nodes typically have corresponding AST nodes, but we can perform more sophisticated reasoning on the data flow graph. Modify your predicate from the previous section to reason about data flow nodes instead of AST nodes.
 
     <details>
     <summary>Hint</summary>
 
-     - Add `import codeql.ruby.dataflow.DataFlow`.
+     - Add `import codeql.ruby.DataFlow`.
      - Change the type of `redirectLocation` from `Expr` to `DataFlow::Node`. This is the generic type of all data flow nodes. Most nodes correspond to expressions or parameters in the AST.
      - Change the type of `redirectCall` from `MethodCall` to `DataFlow::CallNode`. This is a more specialised type of data flow node, corresponding to a particular type of expression in the AST -- a `Call`.
     - There are still compilation errors! Methods are a concept in the AST, not the data flow graph. We cannot call `getEnclosingMethod` on a `DataFlow::Node`, so we have to convert it first into an AST node.
     - Use `asExpr()` to convert from a `DataFlow::Node` into an `ExprCfgNode` -- this is a type of node in the "control flow" graph.
-    - Use `asExpr()` again to convert from a `ExprCfgNode` into an `Expr` -- this is a type of AST node.
+    - Use `getExpr()` to convert from a `ExprCfgNode` into an `Expr` -- this is a type of AST node.
     - The rest of the predicate continues to compile without errors. This is because structural predicates like `getArgument` are defined in parallel on both the AST library and the data flow library.
     </details>
     <details>
@@ -366,13 +370,14 @@ The data flow graph is built on top of the AST, but contains more detailed seman
 
     ```ql
     import codeql.ruby.AST
-    import codeql.ruby.dataflow.DataFlow
+    import codeql.ruby.frameworks.ActionController
+    import codeql.ruby.DataFlow
 
     predicate isRedirect(DataFlow::Node redirectLocation, GetHandlerMethod method) {
       exists(DataFlow::CallNode redirectCall |
         redirectCall.getMethodName() = "redirect_to" and
         redirectLocation = redirectCall.getArgument(0) and
-        redirectCall.asExpr().asExpr().getEnclosingMethod() = method
+        redirectCall.asExpr().getExpr().getEnclosingMethod() = method
       )
     }
     ```
@@ -384,6 +389,7 @@ The data flow graph is built on top of the AST, but contains more detailed seman
 
     - Add `import codeql.ruby.Concepts`.
     - Change the type of `redirectCall` to `Http::Server::HttpRedirectResponse`.
+    - Remove the logical condition that states the method name of `redirectCall` must be `"redirect_to"`.
     - Use `HttpRedirectResponse.getRedirectLocation()` to identify the redirect URL (previously this was the call argument).
 
     </details>
@@ -392,13 +398,14 @@ The data flow graph is built on top of the AST, but contains more detailed seman
 
     ```ql
     import codeql.ruby.AST
+    import codeql.ruby.frameworks.ActionController
+    import codeql.ruby.DataFlow
     import codeql.ruby.Concepts
-    import codeql.ruby.dataflow.DataFlow
 
     predicate isRedirect(DataFlow::Node redirectLocation, GetHandlerMethod method) {
       exists(Http::Server::HttpRedirectResponse redirectCall |
         redirectCall.getRedirectLocation() = redirectLocation and
-        redirectCall.asExpr().asExpr().getEnclosingMethod() = method
+        redirectCall.asExpr().getExpr().getEnclosingMethod() = method
       )
     }
     ```
@@ -436,9 +443,9 @@ In program analysis we call this a _data flow_ or _taint tracking_ problem. Data
 
 We can visualize the data flow problem as one of finding paths through a directed graph, where the nodes of the graph are elements in the program that have a value, and the edges represent the flow of data between those elements. If a path exists, then the data flows between those two nodes.
 
-CodeQL for Ruby provides data flow analysis as part of the standard library. You can import it using `import codeql.ruby.dataflow.DataFlow` and `codeql.ruby.dataflow.TaintTracking`. The library models nodes using the `DataFlow::Node` CodeQL class. These nodes are separate and distinct from the AST (Abstract Syntax Tree, which represents the basic structure of the program) nodes, to allow for flexibility in how data flow is modeled.
+CodeQL for Ruby provides data flow analysis as part of the standard library. You can import it using `import codeql.ruby.DataFlow` and `codeql.ruby.TaintTracking`. The library models nodes using the `DataFlow::Node` CodeQL class. These nodes are separate and distinct from the AST (Abstract Syntax Tree, which represents the basic structure of the program) nodes, to allow for flexibility in how data flow is modeled.
 
-There are a small number of data flow node types – expression nodes and parameter nodes are most common. We have seen the `asExpr()` methods to convert a `DataFlow::Node` into the corresponding AST node; there is also `asParameter()`.
+There are a small number of data flow node types – expression nodes and parameter nodes are most common. We have seen the `asExpr()` method to convert a `DataFlow::Node` into the corresponding control flow node and the `getExpr()` method to convert a control flow node into the corresponding AST node; there is also `asParameter()`.
 
 In this section we will create a data flow query by populating this template:
 
@@ -449,10 +456,11 @@ In this section we will create a data flow query by populating this template:
  * @id rb/url-redirection
  */
 import codeql.ruby.AST
+import codeql.ruby.frameworks.ActionController
 import codeql.ruby.Concepts
-import codeql.ruby.dataflow.DataFlow
+import codeql.ruby.DataFlow
 import codeql.ruby.dataflow.RemoteFlowSources
-import codeql.ruby.dataflow.TaintTracking
+import codeql.ruby.TaintTracking
 
 // TODO add previous class and predicate definitions here
 
@@ -501,7 +509,7 @@ select sink, "Potential URL redirection"
     ```
     </details>
 
-1. You can now run the completed query. You should find exactly two results.
+1. You can now run the completed query. You should find exactly one result.
 
     <details>
     <summary>Solution</summary>
@@ -513,10 +521,11 @@ select sink, "Potential URL redirection"
      * @id rb/url-redirection
      */
     import codeql.ruby.AST
+    import codeql.ruby.frameworks.ActionController
     import codeql.ruby.Concepts
-    import codeql.ruby.dataflow.DataFlow
+    import codeql.ruby.DataFlow
     import codeql.ruby.dataflow.RemoteFlowSources
-    import codeql.ruby.dataflow.TaintTracking
+    import codeql.ruby.TaintTracking
 
     class UrlRedirectionConfig extends TaintTracking::Configuration {
       UrlRedirectionConfig() { this = "UrlRedirectionConfig" }
@@ -544,7 +553,7 @@ select sink, "Potential URL redirection"
     - Use `hasFlowPath` instead of `hasFlow`.
     - Change the `select` clause to report the `source` and `sink` as the second and third columns. The toolchain combines this data with the path information from `PathGraph` to build the paths.
 
-    Convert your previous query to a path-problem query. Run the query to see the paths in the results view.
+    Convert your previous query to a path-problem query. Run the query to see the paths in the results view. You should find exactly two results.
 
     <details>
     <summary>Solution</summary>
@@ -556,10 +565,11 @@ select sink, "Potential URL redirection"
     * @id rb/url-redirection
     */
     import codeql.ruby.AST
+    import codeql.ruby.frameworks.ActionController
     import codeql.ruby.Concepts
-    import codeql.ruby.dataflow.DataFlow
+    import codeql.ruby.DataFlow
     import codeql.ruby.dataflow.RemoteFlowSources
-    import codeql.ruby.dataflow.TaintTracking
+    import codeql.ruby.TaintTracking
     import DataFlow::PathGraph
 
     class GetHandlerMethod extends MethodBase {
