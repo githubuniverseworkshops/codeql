@@ -286,6 +286,7 @@ The arguments of these method calls are the URLs being redirected to, and hence 
     - Use the `and not` keywords to exclude values from a logical formula.
     - Use the `regexpMatch` built-in predicate to match a `string` value using a (Java-style) regular expression. `.*` matches any string pattern. `|` is the alternation/or operator.
     - Use Quick Evaluation on the characteristic predicate to see all values of your new class.
+    - Use the Compare Results command in the Query History view to view the differences in results.
 
     </details>
     <details>
