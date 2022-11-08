@@ -370,6 +370,7 @@ The data flow graph is built on top of the AST, but contains more detailed seman
 
     ```ql
     import codeql.ruby.AST
+    import codeql.ruby.frameworks.ActionController
     import codeql.ruby.DataFlow
 
     predicate isRedirect(DataFlow::Node redirectLocation, GetHandlerMethod method) {
