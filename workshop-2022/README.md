@@ -346,7 +346,7 @@ The arguments of these method calls are the URLs being redirected to, and hence 
 
 ### Section 2: Reasoning about semantic information<a id="section2"></a>
 
-In this section, we will move from reasoning about the AST to reasoning about data flow nodes.
+In this section, we will move from reasoning about the AST to reasoning about data flow.
 The data flow graph is built on top of the AST, but contains more detailed semantic information about the flow of information through the program. We will also use more concepts that are already modelled in the CodeQL standard libraries for Ruby, instead of having to manually model each pattern.
 
 1. The `DataFlow` library models the flow of data through the program. Import this library using `import codeql.ruby.dataflow.DataFlow`. The class `DataFlow::Node` from this library represents semantic elements in the program that may have a value. Data flow nodes typically have corresponding AST nodes, but we can perform more sophisticated reasoning on the data flow graph. Modify your predicate from the previous section to reason about data flow nodes instead of AST nodes.
