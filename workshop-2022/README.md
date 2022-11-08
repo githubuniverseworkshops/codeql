@@ -195,7 +195,7 @@ The arguments of these method calls are the URLs being redirected to, and hence 
     }
 
     from Expr e
-    where isRedirectTarget(e)
+    where isRedirect(e)
     select e
     ```
     </details>
