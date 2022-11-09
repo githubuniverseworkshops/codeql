@@ -23,6 +23,7 @@ Closer to the workshop date, the detailed workshop steps will be available below
 
 Please complete this section before the workshop, if possible.
 
+#### Installation
 - Install [Visual Studio Code](https://code.visualstudio.com/).
 - Install the [CodeQL extension for Visual Studio Code](https://codeql.github.com/docs/codeql-for-visual-studio-code/setting-up-codeql-in-visual-studio-code/).
 - You do _not_ need to install the CodeQL CLI: the extension will handle this for you.
@@ -32,6 +33,9 @@ Please complete this section before the workshop, if possible.
   ```
   - Use `git pull origin main` to regularly keep this clone up to date with the latest state of the repository.
 - Open the repository in Visual Studio Code: **File** > **Open** (or **Open Folder**) > Browse to the checkout of `githubuniverseworkshops/codeql`.
+- Follow **Common setup steps (local and Codespaces)** below.
+
+#### Common setup steps (local and Codespaces)
 - Import the [CodeQL database](https://github.com/githubuniverseworkshops/codeql/releases/download/universe-2022/codeql-ruby-workshop-opf-openproject.zip) to be used in the workshop:
   - Click the **CodeQL** rectangular icon in the left sidebar.
   - Place your mouse over **Databases**, and click the cloud-shaped icon labelled `Download Database`.
@@ -51,7 +55,11 @@ Please complete this section before the workshop, if possible.
 
 ### On Codespaces <a id="setup-codespaces"></a>
 
-Coming soon!
+- Go to https://github.com/githubuniverseworkshops/codeql/codespaces.
+- Click **Create codespace on main**.
+- A Codespace will open in a new browser tab.
+- When the Codespace is ready, it will open a VS Code workspace file, and prompt you to open this workspace and reload. Accept the prompt. The Codespace will reload.
+- After the Codespace reloads, follow **Common setup steps (local and Codespaces)** under [On your local machine](#setup).
 
 ### Useful commands
 - Run a query using the following commands from the Command Palette (`Cmd/Ctrl + Shift + P`) or right-click menu:
