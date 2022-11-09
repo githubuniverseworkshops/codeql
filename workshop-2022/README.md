@@ -38,10 +38,12 @@ Please complete this section before the workshop, if possible.
 #### Common setup steps (local and Codespaces)
 - Import the [CodeQL database](https://github.com/githubuniverseworkshops/codeql/releases/download/universe-2022/codeql-ruby-workshop-opf-openproject.zip) to be used in the workshop:
   - Click the **CodeQL** rectangular icon in the left sidebar.
-  - Place your mouse over **Databases**, and click the cloud-shaped icon labelled `Download Database`.
+  - The first time you do this, the CodeQL extension will download the CodeQL CLI.
+  - In the **Databases** panel, place your mouse over the title, and click the cloud-shaped icon labelled `Download Database` OR click the button **From a URL (as a zip file)**.
   - Copy and paste this URL into the box, then press **OK**/**Enter**: https://github.com/githubuniverseworkshops/codeql/releases/download/universe-2022/codeql-ruby-workshop-opf-openproject.zip
-  - The CodeQL extension will download the CodeQL CLI and the chosen database.
-  - After the database is downloaded, it will appear in the left sidebar under **Databases**. Click on the database name, and click **Set Current Database**.
+  - The CodeQL extension will download the chosen database.
+  - After the database is downloaded, it will appear in the left sidebar under **Databases**. Look for a checkmark to the left of the database name, indicating it is selected.
+    - If the database is not selected, hover your cursor on the database name, and click **Set Current Database**.
 - Install the CodeQL library package for analyzing Ruby code.
   - From the Command Palette (`Cmd/Ctrl+Shift+P`), search for and run the command `CodeQL: Install Pack Dependencies`.
   - At the top of your VS Code window, type `github` in the box to filter the list.
@@ -58,7 +60,8 @@ Please complete this section before the workshop, if possible.
 - Go to https://github.com/githubuniverseworkshops/codeql/codespaces.
 - Click **Create codespace on main**.
 - A Codespace will open in a new browser tab.
-- When the Codespace is ready, it will open a VS Code workspace file, and prompt you to open this workspace and reload. Accept the prompt. The Codespace will reload.
+- When the Codespace is ready, it will open a VS Code workspace file `workshop-2022.code-workspace`.
+- Click **Open Workspace** in the bottom right. The Codespace will reload.
 - After the Codespace reloads, follow **Common setup steps (local and Codespaces)** under [On your local machine](#setup).
 
 ### Useful commands

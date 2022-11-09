@@ -6,8 +6,8 @@
    "customizations": {
     "codespaces": {
       "openFiles": [
-        "workshop-2022/README.md",
-        "workshop-2022/workshop.code-workspace"
+        "workshop-2022.code-workspace",
+        "workshop-2022/README.md"
       ]
     }
   }
