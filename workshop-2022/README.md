@@ -281,7 +281,35 @@ The arguments of these method calls are the URLs being redirected to, and hence 
     ```
     </details>
 
-1. The previous step may now find too many possible methods! Methods named `create/update/destroy/delete` are probably not HTTP `GET` handlers if we can't find a `GET` route in the code. Exclude them from your class.
+1. The previous step may now find too many possible methods! Limit your class to methods declared within `ActionController` classes.
+
+    <details>
+    <summary>Hint</summary>
+
+    - Use the `exists` or `any` quantifiers to declare a variable of type `ActionControllerControllerClass`, and assert that `this` is one of the methods of such a class.
+    - Use Quick Evaluation on the characteristic predicate to see all values of your new class.
+    - Use the Compare Results command in the Query History view to view the differences in results.
+
+    </details>
+    <details>
+    <summary>Solution</summary>
+
+    ```ql
+    import codeql.ruby.AST
+    import codeql.ruby.frameworks.ActionController
+
+    class GetHandlerMethod extends MethodBase {
+      GetHandlerMethod() {
+        this.(ActionControllerActionMethod).getARoute().getHttpMethod() = "get"
+        or
+        not exists(this.(ActionControllerActionMethod).getARoute()) and
+        this = any(ActionControllerControllerClass c).getAMethod()
+      }
+    }
+    ```
+    </details>
+
+1. The previous step may still find too many possible methods! Methods named `create/update/destroy/delete` are probably not HTTP `GET` handlers if we can't find a `GET` route in the code. Exclude them from your class.
 
     <details>
     <summary>Hint</summary>
@@ -304,6 +332,7 @@ The arguments of these method calls are the URLs being redirected to, and hence 
         this.(ActionControllerActionMethod).getARoute().getHttpMethod() = "get"
         or
         not exists(this.(ActionControllerActionMethod).getARoute()) and
+        this = any(ActionControllerControllerClass c).getAMethod() and
         not this.getName().regexpMatch(".*(create|update|destroy).*")
       }
     }
@@ -332,6 +361,7 @@ The arguments of these method calls are the URLs being redirected to, and hence 
         this.(ActionControllerActionMethod).getARoute().getHttpMethod() = "get"
         or
         not exists(this.(ActionControllerActionMethod).getARoute()) and
+        this = any(ActionControllerControllerClass c).getAMethod() and
         not this.getName().regexpMatch(".*(create|update|destroy).*")
       }
     }
@@ -577,6 +607,7 @@ select sink, "Potential URL redirection"
         this.(ActionControllerActionMethod).getARoute().getHttpMethod() = "get"
         or
         not exists(this.(ActionControllerActionMethod).getARoute()) and
+        this = any(ActionControllerControllerClass c).getAMethod() and
         not this.getName().regexpMatch(".*(create|update|destroy).*")
       }
     }
@@ -584,7 +615,7 @@ select sink, "Potential URL redirection"
     predicate isRedirect(DataFlow::Node redirectLocation, GetHandlerMethod method) {
       exists(Http::Server::HttpRedirectResponse redirectCall |
         redirectCall.getRedirectLocation() = redirectLocation and
-        redirectCall.asExpr().asExpr().getEnclosingMethod() = method
+        redirectCall.asExpr().getExpr().getEnclosingMethod() = method
       )
     }
 
