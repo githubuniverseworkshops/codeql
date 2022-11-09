@@ -80,20 +80,21 @@ We will use this reasoning to identify specific Ruby on Rails method calls, whic
 
 The arguments of these method calls are the URLs being redirected to, and hence are potential **sinks** for URL redirection vulnerabilities.
 
-1. Find all method calls in the program. To reason about the abstract syntax tree (AST) of a Ruby program, starting by adding `import codeql.ruby.AST` to your CodeQL query.
+1. Find all method calls in the program. To reason about the abstract syntax tree (AST) of a Ruby program, start by adding `import ruby` to your CodeQL query, and use the types defined in the `Ast` module.
     <details>
     <summary>Hint</summary>
 
-    - A method call is represented by the `MethodCall` type in the CodeQL Ruby library.
+    - Start typing `from Ast::` to see the types available in the AST library.
+    - A method call is represented by the `Ast::MethodCall` type in the CodeQL Ruby library.
 
     </details>
     <details>
     <summary>Solution</summary>
 
     ```ql
-    import codeql.ruby.AST
+    import ruby
 
-    from MethodCall call
+    from Ast::MethodCall call
     select call
     ```
     </details>
@@ -113,9 +114,9 @@ The arguments of these method calls are the URLs being redirected to, and hence 
     <summary>Solution</summary>
 
     ```ql
-    import codeql.ruby.AST
+    import ruby
 
-    from MethodCall redirectCall
+    from Ast::MethodCall redirectCall
     where
       redirectCall.getMethodName() = "redirect_to"
     select redirectCall
@@ -129,7 +130,7 @@ The arguments of these method calls are the URLs being redirected to, and hence 
 
     - `MethodCall.getAnArgument()` returns all possible arguments of the method call.
     - `MethodCall.getArgument(int i)` returns the argument at (0-based) index `i` of the method call.
-    - The argument is an _expression_ in the program, represented by the CodeQL class `Expr`.
+    - The argument is an _expression_ in the program, represented by the CodeQL class `Ast::Expr`.
     - Introduce a new variable in the `from` clause to hold this expression, and output the variable in the `select` clause.
 
     </details>
@@ -137,9 +138,9 @@ The arguments of these method calls are the URLs being redirected to, and hence 
     <summary>Solution</summary>
 
     ```ql
-    import codeql.ruby.AST
+    import ruby
 
-    from MethodCall redirectCall, Expr arg
+    from Ast::MethodCall redirectCall, Ast::Expr arg
     where
       redirectCall.getMethodName() = "redirect_to" and
       arg = redirectCall.getArgument(0)
@@ -149,8 +150,8 @@ The arguments of these method calls are the URLs being redirected to, and hence 
 
 1. Recall that _predicates_ allow you to encapsulate logical conditions in a reusable format. Convert your previous query to a predicate which identifies the set of expressions in the program which are arguments of `redirect_to` method calls. You can use the following template:
     ```ql
-    predicate isRedirect(Expr redirectLocation) {
-      exists(MethodCall redirectCall |
+    predicate isRedirect(Ast::Expr redirectLocation) {
+      exists(Ast::MethodCall redirectCall |
         // TODO fill me in
       )
     }
@@ -169,10 +170,10 @@ The arguments of these method calls are the URLs being redirected to, and hence 
     <summary>Solution</summary>
 
     ```ql
-    import codeql.ruby.AST
+    import ruby
 
-    predicate isRedirect(Expr redirectLocation) {
-      exists(MethodCall redirectCall |
+    predicate isRedirect(Ast::Expr redirectLocation) {
+      exists(Ast::MethodCall redirectCall |
         redirectCall.getMethodName() = "redirect_to" and
         redirectLocation = redirectCall.getArgument(0)
       )
@@ -185,16 +186,16 @@ The arguments of these method calls are the URLs being redirected to, and hence 
     <summary>Solution</summary>
 
     ```ql
-    import codeql.ruby.AST
+    import ruby
 
-     predicate isRedirect(Expr redirectLocation) {
-      exists(MethodCall redirectCall |
+     predicate isRedirect(Ast::Expr redirectLocation) {
+      exists(Ast::MethodCall redirectCall |
         redirectCall.getMethodName() = "redirect_to" and
         redirectLocation = redirectCall.getArgument(0)
       )
     }
 
-    from Expr e
+    from Ast::Expr e
     where isRedirect(e)
     select e
     ```
@@ -202,7 +203,7 @@ The arguments of these method calls are the URLs being redirected to, and hence 
 
 1. Like predicates, _classes_ in CodeQL can be used to encapsulate reusable portions of logic. Classes represent sets of values, and they can also include operations (known as _member predicates_) specific to that set of values. You have already seen some CodeQL classes (`MethodCall`, `Expr` etc.) and associated member predicates (`MethodCall.getMethodName()`, `MethodCall.getArgument(int i)`, etc.).
 
-    `MethodBase` is the class of all Ruby methods. Create a subclass named `GetHandlerMethod`. To begin with, your subclass will contain all the values from the superclass.
+    `Ast::MethodBase` is the class of all Ruby methods. Create a subclass named `GetHandlerMethod`. To begin with, your subclass will contain all the values from the superclass.
 
     <details>
     <summary>Hint</summary>
@@ -213,9 +214,9 @@ The arguments of these method calls are the URLs being redirected to, and hence 
     <summary>Solution</summary>
 
     ```ql
-    import codeql.ruby.AST
+    import ruby
 
-    class GetHandlerMethod extends MethodBase {}
+    class GetHandlerMethod extends Ast::MethodBase {}
     ```
     </details>
 
@@ -240,10 +241,10 @@ The arguments of these method calls are the URLs being redirected to, and hence 
     <summary>Solution</summary>
 
     ```ql
-    import codeql.ruby.AST
+    import ruby
     import codeql.ruby.frameworks.ActionController
 
-    class GetHandlerMethod extends MethodBase {
+    class GetHandlerMethod extends Ast::MethodBase {
       GetHandlerMethod() {
         this.(ActionControllerActionMethod).getARoute().getHttpMethod() = "get"
       }
@@ -268,10 +269,10 @@ The arguments of these method calls are the URLs being redirected to, and hence 
     <summary>Solution</summary>
 
     ```ql
-    import codeql.ruby.AST
+    import ruby
     import codeql.ruby.frameworks.ActionController
 
-    class GetHandlerMethod extends MethodBase {
+    class GetHandlerMethod extends Ast::MethodBase {
       GetHandlerMethod() {
         this.(ActionControllerActionMethod).getARoute().getHttpMethod() = "get"
         or
@@ -295,10 +296,10 @@ The arguments of these method calls are the URLs being redirected to, and hence 
     <summary>Solution</summary>
 
     ```ql
-    import codeql.ruby.AST
+    import ruby
     import codeql.ruby.frameworks.ActionController
 
-    class GetHandlerMethod extends MethodBase {
+    class GetHandlerMethod extends Ast::MethodBase {
       GetHandlerMethod() {
         this.(ActionControllerActionMethod).getARoute().getHttpMethod() = "get"
         or
@@ -324,10 +325,10 @@ The arguments of these method calls are the URLs being redirected to, and hence 
     <summary>Solution</summary>
 
     ```ql
-    import codeql.ruby.AST
+    import ruby
     import codeql.ruby.frameworks.ActionController
 
-    class GetHandlerMethod extends MethodBase {
+    class GetHandlerMethod extends Ast::MethodBase {
       GetHandlerMethod() {
         this.(ActionControllerActionMethod).getARoute().getHttpMethod() = "get"
         or
@@ -353,10 +354,10 @@ The arguments of these method calls are the URLs being redirected to, and hence 
     <summary>Solution</summary>
 
     ```ql
-    import codeql.ruby.AST
+    import ruby
     import codeql.ruby.frameworks.ActionController
 
-    class GetHandlerMethod extends MethodBase {
+    class GetHandlerMethod extends Ast::MethodBase {
       GetHandlerMethod() {
         this.(ActionControllerActionMethod).getARoute().getHttpMethod() = "get"
         or
@@ -366,8 +367,8 @@ The arguments of these method calls are the URLs being redirected to, and hence 
       }
     }
 
-    predicate isRedirect(Expr redirectLocation, GetHandlerMethod method) {
-      exists(MethodCall redirectCall |
+    predicate isRedirect(Ast::Expr redirectLocation, GetHandlerMethod method) {
+      exists(Ast::MethodCall redirectCall |
         redirectCall.getMethodName() = "redirect_to" and
         redirectLocation = redirectCall.getArgument(0) and
         redirectCall.getEnclosingMethod() = method
@@ -382,26 +383,24 @@ The arguments of these method calls are the URLs being redirected to, and hence 
 In this section, we will move from reasoning about the AST to reasoning about data flow.
 The data flow graph is built on top of the AST, but contains more detailed semantic information about the flow of information through the program. We will also use more concepts that are already modelled in the CodeQL standard libraries for Ruby, instead of having to manually model each pattern.
 
-1. The `DataFlow` library models the flow of data through the program. Import this library using `import codeql.ruby.DataFlow`. The class `DataFlow::Node` from this library represents semantic elements in the program that may have a value. Data flow nodes typically have corresponding AST nodes, but we can perform more sophisticated reasoning on the data flow graph. Modify your predicate from the previous section to reason about data flow nodes instead of AST nodes.
+1. The `DataFlow` library models the flow of data through the program. This is already imported by `import ruby`, but you can also explicitly import it using `import codeql.ruby.DataFlow`. The class `DataFlow::Node` from this library represents semantic elements in the program that may have a value. Data flow nodes typically have corresponding AST nodes, but we can perform more sophisticated reasoning on the data flow graph. Modify your predicate from the previous section to reason about data flow nodes instead of AST nodes.
 
     <details>
     <summary>Hint</summary>
 
-     - Add `import codeql.ruby.DataFlow`.
-     - Change the type of `redirectLocation` from `Expr` to `DataFlow::Node`. This is the generic type of all data flow nodes. Most nodes correspond to expressions or parameters in the AST.
-     - Change the type of `redirectCall` from `MethodCall` to `DataFlow::CallNode`. This is a more specialised type of data flow node, corresponding to a particular type of expression in the AST -- a `Call`.
+     - Change the type of `redirectLocation` from `Ast::Expr` to `DataFlow::Node`. This is the generic type of all data flow nodes. Most nodes correspond to expressions or parameters in the AST.
+     - Change the type of `redirectCall` from `Ast::MethodCall` to `DataFlow::CallNode`. This is a more specialised type of data flow node, corresponding to a particular type of expression in the AST -- a `Call`.
     - There are still compilation errors! Methods are a concept in the AST, not the data flow graph. We cannot call `getEnclosingMethod` on a `DataFlow::Node`, so we have to convert it first into an AST node.
-    - Use `asExpr()` to convert from a `DataFlow::Node` into an `ExprCfgNode` -- this is a type of node in the "control flow" graph.
-    - Use `getExpr()` to convert from a `ExprCfgNode` into an `Expr` -- this is a type of AST node.
+    - Use `asExpr()` to convert from a `DataFlow::Node` into a `Cfg::ExprCfgNode` -- this is a type of node in the "control flow" graph.
+    - Use `getExpr()` to convert from a `ExprCfgNode` into an `Ast::Expr` -- this is a type of AST node.
     - The rest of the predicate continues to compile without errors. This is because structural predicates like `getArgument` are defined in parallel on both the AST library and the data flow library.
     </details>
     <details>
     <summary>Solution</summary>
 
     ```ql
-    import codeql.ruby.AST
+    import ruby
     import codeql.ruby.frameworks.ActionController
-    import codeql.ruby.DataFlow
 
     predicate isRedirect(DataFlow::Node redirectLocation, GetHandlerMethod method) {
       exists(DataFlow::CallNode redirectCall |
@@ -427,9 +426,8 @@ The data flow graph is built on top of the AST, but contains more detailed seman
     <summary>Solution</summary>
 
     ```ql
-    import codeql.ruby.AST
+    import ruby
     import codeql.ruby.frameworks.ActionController
-    import codeql.ruby.DataFlow
     import codeql.ruby.Concepts
 
     predicate isRedirect(DataFlow::Node redirectLocation, GetHandlerMethod method) {
@@ -473,11 +471,11 @@ In program analysis we call this a _data flow_ or _taint tracking_ problem. Data
 
 We can visualize the data flow problem as one of finding paths through a directed graph, where the nodes of the graph are elements in the program that have a value, and the edges represent the flow of data between those elements. If a path exists, then the data flows between those two nodes.
 
-CodeQL for Ruby provides data flow analysis as part of the standard library. You can import it using `import codeql.ruby.DataFlow` and `codeql.ruby.TaintTracking`. The library models nodes using the `DataFlow::Node` CodeQL class. These nodes are separate and distinct from the AST (Abstract Syntax Tree, which represents the basic structure of the program) nodes, to allow for flexibility in how data flow is modeled.
+CodeQL for Ruby provides data flow analysis as part of the standard library. You can import the data flow library using `import ruby` (which in turn imports `codeql.ruby.DataFlow`), and you can import the taint tracking library using `import codeql.ruby.TaintTracking`. Data flow tracks the flow of the same precise values through the program. Taint tracking is less precise, and tracks the flow of values that may change slightly through the program. Both libraries model program elements using the `DataFlow::Node` CodeQL class. These nodes are separate and distinct from the AST (Abstract Syntax Tree) nodes, which represent the basic structure of the program. This allows greater flexibility in how data flow is modeled.
 
 There are a small number of data flow node types – expression nodes and parameter nodes are most common. We have seen the `asExpr()` method to convert a `DataFlow::Node` into the corresponding control flow node and the `getExpr()` method to convert a control flow node into the corresponding AST node; there is also `asParameter()`.
 
-In this section we will create a data flow query by populating this template:
+In this section we will create a taint tracking query by populating this template:
 
 ```ql
 /**
@@ -485,10 +483,9 @@ In this section we will create a data flow query by populating this template:
  * @kind problem
  * @id rb/url-redirection
  */
-import codeql.ruby.AST
+import ruby
 import codeql.ruby.frameworks.ActionController
 import codeql.ruby.Concepts
-import codeql.ruby.DataFlow
 import codeql.ruby.dataflow.RemoteFlowSources
 import codeql.ruby.TaintTracking
 
@@ -550,10 +547,9 @@ select sink, "Potential URL redirection"
      * @kind problem
      * @id rb/url-redirection
      */
-    import codeql.ruby.AST
+    import ruby
     import codeql.ruby.frameworks.ActionController
     import codeql.ruby.Concepts
-    import codeql.ruby.DataFlow
     import codeql.ruby.dataflow.RemoteFlowSources
     import codeql.ruby.TaintTracking
 
@@ -594,10 +590,9 @@ select sink, "Potential URL redirection"
     * @kind path-problem
     * @id rb/url-redirection
     */
-    import codeql.ruby.AST
+    import ruby
     import codeql.ruby.frameworks.ActionController
     import codeql.ruby.Concepts
-    import codeql.ruby.DataFlow
     import codeql.ruby.dataflow.RemoteFlowSources
     import codeql.ruby.TaintTracking
     import DataFlow::PathGraph
