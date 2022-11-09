@@ -13,10 +13,13 @@ Closer to the workshop date, the detailed workshop steps will be available below
   - [On Codespaces](#setup-codespaces)
   - Useful commands
 - [Workshop](#workshop)
+  - [Section 1: syntactic reasoning](#section1)
+  - [Section 2: semantic reasoning](#section2)
+  - [Section 3: URL redirection](#section3)
 
 ## Prerequisites and setup instructions
 
-### On your local machine) <a id="setup"></a>
+### On your local machine <a id="setup"></a>
 
 Please complete this section before the workshop, if possible.
 
@@ -65,7 +68,11 @@ Coming soon!
 
 ### Problem statement
 
-In this workshop we will look for _URL redirection vulnerabilities_ in Ruby code using the Ruby on Rails framework. The example that we will find was a potential vulnerability in the open-source project management software OpenProject, which was introduced in a pull request, identified by CodeQL static analysis on the PR, diagnosed during PR review, and fixed before the PR was merged. It remained a potential problem, not a real vulnerability, thanks to the efforts of the project maintainers. However, it is a good example to help us understand and detect serious URL redirection vulnerabilities that may occur elsewhere.
+In this workshop we will look for _URL redirection vulnerabilities_ in Ruby code that uses the Ruby on Rails framework. Such vulnerabilities can occur in web applications when a URL string that is controlled by an external user makes its way to application code that redirects the current user's browser to the supplied URL.
+
+The example that we will find was a potential vulnerability in the open-source project management software [OpenProject](https://github.com/opf/openproject), which was introduced in a pull request, identified by CodeQL static analysis on the PR, diagnosed during PR review, and fixed before the PR was merged. Note that it remained a potential problem, not a real vulnerability, thanks to the efforts of the project maintainers and a safe default setting built into Rails 7. However, it is a good example to help us understand and detect serious URL redirection vulnerabilities that may occur elsewhere.
+
+(OpenProject is licensed under the [GNU GPL v3.0](https://github.com/opf/openproject/blob/dev/LICENSE).)
 
 The workshop is split into several steps.
 You can write one query per step, or work with a single query that you refine at each step. Each step has a **hint** that describes useful classes and predicates in the CodeQL standard libraries for Ruby.
@@ -439,7 +446,11 @@ The data flow graph is built on top of the AST, but contains more detailed seman
     ```
     </details>
 
-1. Define a new predicate `isSource(DataFlow::Node source)` that describes **sources** of untrusted user input in the program. The CodeQL standard libraries have a class that already models this for you.
+1. [`params`](https://api.rubyonrails.org/v7.0.4/classes/ActionController/StrongParameters.html#method-i-params) is a method available on Rails controller classes. It returns a hash (specifically of type [`ActionController::Parameters`](https://guides.rubyonrails.org/action_controller_overview.html#parameters)) that has been instantiated (by Rails) with the parameters of the incoming HTTP request.
+
+    These parameters are a source of remote user input. In the CodeQL standard library for Ruby, they are modelled by the `ParamsSource` class, which is a subclass of the more general `RemoteFlowSource` class.
+
+    Define a new predicate `isSource(DataFlow::Node source)` that describes all **sources** of remote user input in the program.
 
     <details>
     <summary>Hint</summary>
@@ -631,7 +642,7 @@ select sink, "Potential URL redirection"
     ```
     </details>
 
-For more information on how this potential vulnerability was identified early and fixed, please read [the discussion in this pull request](https://github.com/opf/openproject/pull/10708#discussion_r892299693). This potential problem never made it into the development branch or production code, thanks to the efforts of the project maintainers. However, it is a good example to help us understand and detect URL redirection vulnerabilities that may occur elsewhere.
+For more information on how this potential vulnerability was identified early and fixed, please read [the discussion in this pull request](https://github.com/opf/openproject/pull/10708#discussion_r892299693). This potential problem never made it into the development branch or production code, thanks to the efforts of the project maintainers, and the codebase was also safe due to the use of Rails 7, which blocks open redirects by default. However, it is a good example to help us understand and detect more serious URL redirection vulnerabilities that may occur elsewhere.
 
 ## What's next?
 - [CodeQL overview](https://codeql.github.com/docs/codeql-overview/)
